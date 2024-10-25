@@ -23,4 +23,6 @@ public class Producto {
     @JoinColumn(name = "codigo_fabricante", referencedColumnName = "codigo")
     private Fabricante fabricante;
 
+    public static final double FACT = 1.08;
+
 }    
