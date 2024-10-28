@@ -198,6 +198,11 @@ class TiendaApplicationTests {
 	void test11() {
 		var listProds = prodRepo.findAll();
 
+		listProds.stream()
+				.max(comparing(Producto::getPrecio))
+				.ifPresentOrElse(producto -> System.out.println(producto.getNombre() + producto.getPrecio()),
+						() -> System.out.println("Colección vacía"));
+
 	}
 	
 	/**
@@ -207,7 +212,16 @@ class TiendaApplicationTests {
 	@Test
 	void test12() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var listProdsFab2 = listProds.stream()
+				.filter(producto -> producto.getFabricante().getCodigo() == 2)
+				.map(Producto::getNombre)
+				.toList();
+
+		System.out.println(listProdsFab2);
+
+		Assertions.assertTrue(listProdsFab2.contains("Portátil Yoga 520") && listProdsFab2.contains("Portátil Ideapd 320"));
+		Assertions.assertEquals(2, listProdsFab2.size());
 	}
 	
 	/**
@@ -216,7 +230,14 @@ class TiendaApplicationTests {
 	@Test
 	void test13() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+						.filter(producto -> producto.getPrecio() <=120)
+						.map(producto -> producto.getNombre())
+						.toList();
+
+		result.forEach(System.out::println);
+		Assertions.assertEquals(3, result.size());
 	}
 	
 	/**
