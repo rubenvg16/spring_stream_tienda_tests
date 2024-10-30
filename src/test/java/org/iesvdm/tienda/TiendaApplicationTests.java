@@ -10,10 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
+import static java.util.stream.Collectors.toList;
 
 
 @SpringBootTest
@@ -246,7 +249,13 @@ class TiendaApplicationTests {
 	@Test
 	void test14() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		List<Producto> listProdsPrecio= listProds.stream()
+					.filter(producto -> producto.getPrecio()>=400)
+					.toList();
+
+		listProdsPrecio.forEach(System.out::println);
+		Assertions.assertEquals(3, listProdsPrecio.size());
 	}
 	
 	/**
@@ -255,7 +264,15 @@ class TiendaApplicationTests {
 	@Test
 	void test15() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var listaProdsPrecio = listProds.stream()
+									.filter(producto -> producto.getPrecio()>=80
+											&& producto.getPrecio()<=300)
+									.toList();
+
+		listaProdsPrecio.forEach(System.out::println);
+		Assertions.assertEquals(7, listaProdsPrecio.size());
+
 	}
 	
 	/**
@@ -264,7 +281,14 @@ class TiendaApplicationTests {
 	@Test
 	void test16() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var listProdsPrecio = listProds.stream()
+									.filter(producto -> producto.getPrecio()>=200
+										&& producto.getFabricante().getCodigo()==6)
+									.toList();
+
+		listProdsPrecio.forEach(System.out::println);
+		Assertions.assertEquals(1, listProdsPrecio.size());
 	}
 	
 	/**
@@ -273,7 +297,21 @@ class TiendaApplicationTests {
 	@Test
 	void test17() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		Set<Integer> codigos = Set.of(1,3,5);
+
+		var result = listProds.stream()
+				.filter(producto -> codigos.contains(producto.getFabricante().getCodigo()))
+//				.filter(p -> p.getFabricante().getCodigo()==1
+//						|| p.getFabricante().getCodigo()==3          *SIN USAR EL SET*
+//						|| p.getFabricante().getCodigo()==5)
+				.toList();
+
+		result.forEach(System.out::println);
+		Assertions.assertTrue(result.get(0).getFabricante().getCodigo()==1
+				|| result.get(0).getFabricante().getCodigo()==3
+				|| result.get(0).getFabricante().getCodigo()==5);
+		Assertions.assertEquals(5, result.size());
 	}
 	
 	/**
@@ -282,7 +320,15 @@ class TiendaApplicationTests {
 	@Test
 	void test18() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+				.map(producto -> "Nombre: " + producto.getNombre() + ", Precio(en céntimos): " + producto.getPrecio()*100)
+				.toList();
+
+		result.forEach(System.out::println);
+
+		Assertions.assertEquals(11, result.size());
+		Assertions.assertTrue(result.get(7).contains("55900"));
 	}
 	
 	
@@ -292,7 +338,14 @@ class TiendaApplicationTests {
 	@Test
 	void test19() {
 		var listFabs = fabRepo.findAll();
-		//TODOS
+
+		var result = listFabs.stream()
+								.filter(t-> t.getNombre().substring(0,1).equalsIgnoreCase("S"))
+								.toList();
+
+		result.forEach(System.out::println);
+
+		Assertions.assertEquals(2, result.size());
 	}
 	
 	/**
@@ -301,7 +354,14 @@ class TiendaApplicationTests {
 	@Test
 	void test20() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+								.filter(p-> p.getNombre().matches(".*Port[á|a]til.*"))
+								.toList();
+
+		result.forEach(System.out::println);
+
+		Assertions.assertEquals(2, result.size());
 	}
 	
 	/**
@@ -310,16 +370,32 @@ class TiendaApplicationTests {
 	@Test
 	void test21() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+				.filter(producto -> producto.getNombre().contains("Monitor")
+								&& producto.getPrecio()<215)
+				.toList();
+
+		result.forEach(System.out::println);
+		Assertions.assertEquals(1, result.size());
+
 	}
 	
 	/**
 	 * 22. Lista el nombre y el precio de todos los productos que tengan un precio mayor o igual a 180€. 
 	 * Ordene el resultado en primer lugar por el precio (en orden descendente) y en segundo lugar por el nombre (en orden ascendente).
 	 */
+
+	@Test
 	void test22() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+				.filter(producto -> producto.getPrecio()>=180)
+				.sorted(comparing(Producto::getPrecio, reverseOrder())
+						.thenComparing(Producto::getNombre))
+				.toList();
+
 	}
 	
 	/**
