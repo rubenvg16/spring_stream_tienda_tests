@@ -13,6 +13,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
@@ -396,6 +397,9 @@ class TiendaApplicationTests {
 						.thenComparing(Producto::getNombre))
 				.toList();
 
+		result.forEach(System.out::println);
+		Assertions.assertEquals(7, result.size());
+
 	}
 	
 	/**
@@ -405,7 +409,19 @@ class TiendaApplicationTests {
 	@Test
 	void test23() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+				.sorted(comparing(producto -> producto.getFabricante().getNombre()))
+				.map(producto -> producto.getNombre()
+						+ producto.getPrecio()
+						+ producto.getFabricante().getNombre())
+
+				.toList()
+				;
+
+		result.forEach(System.out::println);
+
+		Assertions.assertEquals(11, result.size());
 	}
 	
 	/**
@@ -414,7 +430,17 @@ class TiendaApplicationTests {
 	@Test
 	void test24() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+				.sorted(comparing(Producto::getPrecio,reverseOrder()))
+				.findFirst()
+				.map(producto -> producto.getNombre() + " "
+						+ producto.getPrecio() + " "
+						+ producto.getFabricante().getNombre())
+				.orElse(null);
+
+		System.out.println(result);
+		Assertions.assertEquals("GeForce GTX 1080 Xtreme",result);
 	}
 	
 	/**
@@ -432,7 +458,20 @@ class TiendaApplicationTests {
 	@Test
 	void test26() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		Set<String> setFabricantes = new HashSet<>();
+		setFabricantes.add("Asus");
+		setFabricantes.add("Hewelett-Packard");
+		setFabricantes.add("Seagate");
+		var result = listProds.stream()
+				.filter(p-> setFabricantes.contains(p.getFabricante().getNombre()))
+				.toList();
+		result.forEach(System.out::println);
+		Assertions.assertEquals(3, result.size());
+		setFabricantes.forEach(s -> Assertions
+				.assertTrue(result.stream()
+						.anyMatch(p -> p.getFabricante().getNombre().equalsIgnoreCase(s))));
+
 	}
 	
 	/**
@@ -452,7 +491,12 @@ Monitor 27 LED Full HD |199.25190000000003|Asus
 	@Test
 	void test27() {
 		var listProds = prodRepo.findAll();
-		//TODO
+		var result = listProds.stream()
+				.sorted(comparing(Producto::getPrecio,reverseOrder()).thenComparing(Producto::getNombre))
+				.map(producto -> producto.getNombre() + " " + producto.getPrecio() + " " + producto.getFabricante().getNombre())
+				.toList();
+
+		result.forEach(System.out::println);
 	}
 	
 	/**
@@ -512,9 +556,17 @@ Fabricante: Xiaomi
 	@Test
 	void test28() {
 		var listFabs = fabRepo.findAll();
-		//TODO
+
+		listFabs.stream()
+				.map(fabricante ->
+						"Fabricante: " + fabricante.getNombre() + "\n\n"
+								+ "Productos: " + "\n"
+								+ fabricante.getProductos()
+								.stream()
+								.map(producto -> producto.getNombre() + "\n")
+								.collect(Collectors.joining()))
+				.forEach(System.out::println);
 	}
-	
 	/**
 	 * 29. Devuelve un listado donde sólo aparezcan aquellos fabricantes que no tienen ningún producto asociado.
 	 */
