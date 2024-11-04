@@ -7,12 +7,10 @@ import org.iesvdm.tienda.repository.ProductoRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparing;
@@ -28,6 +26,8 @@ class TiendaApplicationTests {
 	
 	@Autowired
 	ProductoRepository prodRepo;
+    @Autowired
+    private DataSourceTransactionManagerAutoConfiguration dataSourceTransactionManagerAutoConfiguration;
 
 	@Test
 	void testAllFabricante() {
@@ -719,7 +719,7 @@ Fabricante: Xiaomi
 						doubles[3]+doubles2[3]})
 				.orElse(new Double[]{});
 
-		Double media = result[3]>0 ? result[2]/result[3]: 0.0;
+		double media = result[3]>0 ? result[2]/result[3]: 0.0;
 		System.out.println("El valor mínimo: " + result[0]);
 		System.out.println("El valor máximo: " + result[1]);
 		System.out.println("El valor medio: " + media);
@@ -754,7 +754,14 @@ Hewlett-Packard              2
 	@Test
 	void test38() {
 		var listFabs = fabRepo.findAll();
-		//TODO
+		var result = listFabs.stream()
+				.sorted(comparing(fabricante -> fabricante.getProductos().size(),reverseOrder()))
+				.map(fabricante -> fabricante.getNombre() + "						"
+							+ fabricante.getProductos().size())
+				.toList();
+		result.forEach(System.out::println);
+
+		Assertions.assertEquals(9, result.size());
 	}
 	
 	/**
@@ -764,8 +771,38 @@ Hewlett-Packard              2
 	 */
 	@Test
 	void test39() {
-		var listFabs = fabRepo.findAll();
-		//TODO
+		var listProds = prodRepo.findAll();
+
+		var result = listProds.stream()
+				.collect(Collectors.groupingBy(
+						producto -> producto.getFabricante().getNombre(),
+						Collectors.reducing(new Double[]{
+								Double.MAX_VALUE,
+								Double.MIN_VALUE,
+								0.0,
+								0.0
+						}, producto -> new Double[]{
+								producto.getPrecio(),
+								producto.getPrecio(),
+								1.0
+						}, (acc, curr) -> new Double[]{
+								Math.min(acc[0], curr[0]),
+								Math.max(acc[1], curr[1]),
+								acc[2] + curr[0],
+								acc[3] + curr[2]
+						})
+				));
+
+		result.forEach((fabricante, precios) -> {
+			double media = precios[3] > 0 ? precios[2] / precios[3] : 0.0;
+
+			System.out.println("Fabricante: " + fabricante);
+			System.out.println("Precio mínimo: " + (precios[3] > 0 ? precios[0] : "No disponible"));
+			System.out.println("Precio máximo: " + (precios[3] > 0 ? precios[1] : "No disponible"));
+			System.out.println("Precio medio: " + media);
+			System.out.println("Número total de productos: " + precios[3]);
+			System.out.println();
+		});
 	}
 	
 	/**
@@ -774,8 +811,44 @@ Hewlett-Packard              2
 	 */
 	@Test
 	void test40() {
-		var listFabs = fabRepo.findAll();
-		//TODO
+		var listProds = prodRepo.findAll();
+
+		var result = listProds.stream()
+				.collect(Collectors.groupingBy(
+						producto -> producto.getFabricante().getCodigo(),
+						Collectors.reducing(new Double[] {
+								Double.MAX_VALUE,
+								Double.MIN_VALUE,
+								0.0,
+								0.0
+						}, producto -> new Double[] {
+								producto.getPrecio(),
+								producto.getPrecio(),
+								1.0
+						}, (acc, curr) -> new Double[] {
+								Math.min(acc[0], curr[0]),
+								Math.max(acc[1], curr[1]),
+								acc[2] + curr[0],
+								acc[3] + curr[2]
+						})
+				))
+				.entrySet().stream()
+				.filter(entry -> (entry.getValue()[2] / entry.getValue()[3]) > 200);
+
+		result.forEach(entry -> {
+			Double[] precios = entry.getValue();
+			Double precioMinimo = precios[0];
+			Double precioMaximo = precios[1];
+			double precioMedio = precios[2] / precios[3];
+			Double totalProductos = precios[3];
+
+			System.out.println("Precio mínimo: " + precioMinimo);
+			System.out.println("Precio máximo: " + precioMaximo);
+			System.out.println("Precio medio: " + precioMedio);
+			System.out.println("Número total de productos: " + totalProductos);
+			System.out.println();
+		});
+
 	}
 	
 	/**
@@ -784,7 +857,16 @@ Hewlett-Packard              2
 	@Test
 	void test41() {
 		var listFabs = fabRepo.findAll();
-		//TODO
+
+		var result = listFabs.stream()
+				.filter(fabricante -> fabricante.getProductos().size() >= 2)
+				.map(Fabricante::getNombre)
+				.toList();
+
+
+		result.forEach(System.out::println);
+
+		Assertions.assertEquals(4, result.size());
 	}
 	
 	/**
@@ -794,16 +876,40 @@ Hewlett-Packard              2
 	@Test
 	void test42() {
 		var listFabs = fabRepo.findAll();
-		//TODO
+
+		var result = listFabs.stream()
+				.collect(Collectors.toMap(
+						Fabricante::getNombre,
+						fabricante -> fabricante.getProductos().stream()
+								.filter(producto -> producto.getPrecio() >= 220)
+								.count()
+				))
+				.entrySet().stream()
+				.filter(entry -> entry.getValue() > 0)
+				.sorted((entry1, entry2) -> Long.compare(entry2.getValue(), entry1.getValue()))
+				.toList();
+
+		result.forEach(System.out::println);
+
+		Assertions.assertEquals(3, result.size());
 	}
-	
 	/**
 	 * 43.Devuelve un listado con los nombres de los fabricantes donde la suma del precio de todos sus productos es superior a 1000 €
 	 */
 	@Test
 	void test43() {
 		var listFabs = fabRepo.findAll();
-		//TODO
+
+		var result = listFabs.stream()
+				.filter(fabricante -> fabricante.getProductos().stream()
+						.mapToDouble(Producto::getPrecio)
+						.sum() > 1000)
+				.map(Fabricante::getNombre)
+				.toList();
+
+		result.forEach(System.out::println);
+
+		Assertions.assertEquals(1, result.size());
 	}
 	
 	/**
@@ -813,7 +919,21 @@ Hewlett-Packard              2
 	@Test
 	void test44() {
 		var listFabs = fabRepo.findAll();
-		//TODO	
+
+		var result = listFabs.stream()
+				.map(fabricante -> new AbstractMap.SimpleEntry<>(
+						fabricante.getNombre(),
+						fabricante.getProductos().stream()
+								.mapToDouble(Producto::getPrecio)
+								.sum()
+				))
+				.filter(entry -> entry.getValue() > 1000)
+				.sorted(Map.Entry.comparingByValue())
+				.toList();
+
+		result.forEach(System.out::println);
+
+		Assertions.assertEquals(1, result.size());
 	}
 	
 	/**
@@ -824,7 +944,8 @@ Hewlett-Packard              2
 	@Test
 	void test45() {
 		var listFabs = fabRepo.findAll();
-		//TODO
+
+
 	}
 	
 	/**
