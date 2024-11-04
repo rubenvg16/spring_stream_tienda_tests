@@ -573,7 +573,13 @@ Fabricante: Xiaomi
 	@Test
 	void test29() {
 		var listFabs = fabRepo.findAll();
-		//TODO
+
+		var result = listFabs.stream()
+				.filter(fabricante -> fabricante.getProductos().isEmpty())
+				.toList();
+
+		result.forEach(System.out::println);
+		Assertions.assertEquals(2, result.size());
 	}
 	
 	/**
@@ -582,7 +588,13 @@ Fabricante: Xiaomi
 	@Test
 	void test30() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+				.count();
+
+		System.out.println(result);
+
+		Assertions.assertEquals(11, result);
 	}
 
 	
@@ -592,7 +604,10 @@ Fabricante: Xiaomi
 	@Test
 	void test31() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream().map(Producto::getFabricante).distinct().count();
+
+		Assertions.assertEquals(7, result);
 	}
 	
 	/**
@@ -601,7 +616,15 @@ Fabricante: Xiaomi
 	@Test
 	void test32() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+				.mapToDouble(Producto::getPrecio)
+				.average();
+
+		System.out.println(result.orElse(0.0));
+
+		Assertions.assertEquals(271.7236363636364,result.orElse(0.0));
+
 	}
 	
 	/**
@@ -610,7 +633,13 @@ Fabricante: Xiaomi
 	@Test
 	void test33() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+				.mapToDouble(Producto::getPrecio)
+				.min();
+
+		System.out.println(result.orElse(0.0));
+		Assertions.assertEquals(59.99,result.orElse(0.0));
 	}
 	
 	/**
@@ -619,7 +648,17 @@ Fabricante: Xiaomi
 	@Test
 	void test34() {
 		var listProds = prodRepo.findAll();
-		//TODO	
+
+		var result = listProds.stream()
+				.mapToDouble(Producto::getPrecio)
+				.sum();
+
+//		var result = listProds.stream()
+//				.mapToDouble(Producto::getPrecio)
+//				.reduce(0, (left, right) -> left+right);
+
+		System.out.println(result);
+
 	}
 	
 	/**
@@ -628,7 +667,12 @@ Fabricante: Xiaomi
 	@Test
 	void test35() {
 		var listProds = prodRepo.findAll();
-		//TODO		
+
+		var result = listProds.stream()
+				.filter(producto -> producto.getFabricante().getNombre().toLowerCase().equals("asus"))
+				.count();
+
+        Assertions.assertEquals(2, result);
 	}
 	
 	/**
@@ -637,7 +681,15 @@ Fabricante: Xiaomi
 	@Test
 	void test36() {
 		var listProds = prodRepo.findAll();
-		//TODO
+		var result = listProds.stream()
+				.filter(producto -> producto.getFabricante().getNombre().equalsIgnoreCase("asus"))
+				.mapToDouble(Producto::getPrecio)
+				.average()
+				.orElse(0);
+
+		System.out.println(result);
+
+		Assertions.assertEquals(223.995, result);
 	}
 	
 	
@@ -648,9 +700,37 @@ Fabricante: Xiaomi
 	@Test
 	void test37() {
 		var listProds = prodRepo.findAll();
-		//TODO
+
+		var result = listProds.stream()
+				.filter(producto -> producto
+										.getFabricante()
+										.getNombre()
+										.equalsIgnoreCase("crucial"))
+				//.limit(1)
+				.map(producto -> new Double[]{
+						producto.getPrecio(),
+						producto.getPrecio(),
+						producto.getPrecio(),
+						1.0})
+				.reduce((doubles, doubles2) -> new Double[]{
+						Math.min(doubles[0],doubles2[0]),
+						Math.max(doubles[0],doubles2[0]),
+						doubles[2]+doubles2[2],
+						doubles[3]+doubles2[3]})
+				.orElse(new Double[]{});
+
+		Double media = result[3]>0 ? result[2]/result[3]: 0.0;
+		System.out.println("El valor mínimo: " + result[0]);
+		System.out.println("El valor máximo: " + result[1]);
+		System.out.println("El valor medio: " + media);
+		System.out.println("El número total de valores: " + result[3]);
+
+		Assertions.assertTrue(result[0] > 120.0);
+		Assertions.assertTrue(result[1] > 755.0);
+		Assertions.assertTrue(result[2] > 475.5);
+
 	}
-	
+
 	/**
 	 * 38. Muestra el número total de productos que tiene cada uno de los fabricantes. 
 	 * El listado también debe incluir los fabricantes que no tienen ningún producto. 
